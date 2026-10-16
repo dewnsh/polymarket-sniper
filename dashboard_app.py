@@ -197,7 +197,8 @@ for i, (m_name, interval, sub_interval) in enumerate(markets_to_scan):
 
 st.markdown("---")
 st.markdown("### 📋 Active Rule & Execution Log")
-st.info("💡 **Pro-Tip for Manual Trading:** When a **🟢 Fortress Snipe** triggers, never click market buy. Place a **Maker Limit Order** inside the suggested 52¢–60¢ price zone and wait for impatient sellers to fill you. If a **🚨 Emergency Flip Alarm** fires while holding a position, exit immediately to protect your capital from late-window reversal wicks.")import math
+st.info("Pro-Tip: When a Fortress Snipe triggers, use a Maker Limit Order inside the 52c-60c zone. Exit immediately if an Emergency Flip Alarm fires.")
+import math
 import requests
 import numpy as np
 import pandas as pd
