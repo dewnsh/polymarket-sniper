@@ -25,9 +25,9 @@ st.markdown("""
 
 # --- TELEGRAM ALERT CONFIGURATION ---
 def send_telegram_alert(message):
-    TOKEN = "YOUR_BOT_TOKEN_HERE"      
-    CHAT_ID = "YOUR_CHAT_ID_HERE"      
-    if TOKEN == "YOUR_BOT_TOKEN_HERE":
+    TOKEN = 8750313394:AAHd-imlWzWseG4wLZ9tfwtVr-Hn3fKZPbY      
+    CHAT_ID = 5458794634      
+    if TOKEN == 8750313394:AAHd-imlWzWseG4wLZ9tfwtVr-Hn3fKZPbY:
         return  
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
