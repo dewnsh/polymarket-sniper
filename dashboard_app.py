@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import yfinance as yf
+from datetime import datetime, timezone
 from scipy.stats import t as student_t
 
 # --- PAGE CONFIGURATION ---
@@ -25,10 +26,8 @@ st.markdown("""
 
 # --- TELEGRAM ALERT CONFIGURATION ---
 def send_telegram_alert(message):
-    TOKEN = 8750313394:AAHd-imlWzWseG4wLZ9tfwtVr-Hn3fKZPbY      
-    CHAT_ID = 5458794634      
-    if TOKEN == 8750313394:AAHd-imlWzWseG4wLZ9tfwtVr-Hn3fKZPbY:
-        return  
+    TOKEN = "8750313394:AAHd-imLWwSeg4wLZ9tfwtVr-Hn3fKZPbY"
+    CHAT_ID = "5458794634"
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
     try:
@@ -115,6 +114,11 @@ def analyze_market_window(market_name: str, interval: str, sub_interval: str):
     fakeout_flip_ready = fragile_lead and (upper_wick >= 1.2 * sub_body or lower_wick >= 1.2 * sub_body) and \
                          ((cur_dir == "UP" and spot_buy_ratio <= 0.45) or (cur_dir == "DOWN" and spot_buy_ratio >= 0.55))
 
+    # Calculate time remaining in current hour/window
+    now_utc = datetime.now(timezone.utc)
+    mins_past_hour = now_utc.minute
+    mins_remaining = 60 - mins_past_hour if interval == "1h" else (240 - (now_utc.hour % 4) * 60 - mins_past_hour)
+
     if flip_shield_active:
         signal = "RED_FLIP_SHIELD"
         message = "🚨 EMERGENCY FLIP ALARM: Spot flow diverging against cushion! Exit or Eject immediately."
@@ -122,13 +126,13 @@ def analyze_market_window(market_name: str, interval: str, sub_interval: str):
         flip_side = "DOWN" if cur_dir == "UP" else "UP"
         signal = "PURPLE_FAKEOUT_FLIP"
         message = f"💜 OFFENSIVE FAKEOUT FLIP: Weak lead is stalling. Opportunity to fade into {flip_side} at 32c-44c."
-    elif cushion_ok and spot_flow_ok and (not perp_fakeout_veto) and (0.52 <= model_share <= 0.65):
+    elif cushion_ok and spot_flow_ok and (not perp_fakeout_veto) and (0.52 <= model_share <= 0.65) and (model_share * 100 < 70):
         signal = "GREEN_FORTRESS_SNIPE"
         message = f"🟢 FORTRESS SNIPE READY: Clean spot-backed trend. Post Maker Limit Bid for {cur_dir} at 52c-60c."
         send_telegram_alert(f"🎯 *TRADING ALERT!*\n\n{market_name}\n{message}\nModel Prob: {model_share * 100:.1f}%")
     else:
         signal = "AMBER_WAIT"
-        message = "⏳ WAITING / CHOPPY: Conditions do not meet A+ criteria. Stay flat."
+        message = f"⏳ WAITING / CHOPPY: Next clean window opens soon ({mins_remaining}m remaining in current block)."
 
     return {
         "market": market_name,
@@ -140,7 +144,8 @@ def analyze_market_window(market_name: str, interval: str, sub_interval: str):
         "spot_buy_ratio": spot_buy_ratio_3 * 100,
         "model_share": model_share * 100,
         "signal": signal,
-        "message": message
+        "message": message,
+        "mins_remaining": mins_remaining
     }
 
 # --- UI LAYOUT ---
@@ -180,7 +185,8 @@ for i, (m_name, interval, sub_interval) in enumerate(markets_to_scan):
             <b>Strike (Open):</b> ${data['strike_price']:,.2f}<br>
             <b>Distance:</b> ${data['dist']:+,.2f} ({data['cushion_atr']:.2f} ATR)<br>
             <b>Spot Buy Flow:</b> {data['spot_buy_ratio']:.1f}%<br>
-            <b>Model Probability:</b> {data['model_share']:.1f}%
+            <b>Model Probability:</b> {data['model_share']:.1f}%<br>
+            <b>Time Left in Window:</b> ~{data['mins_remaining']} mins
         </div>
         """, unsafe_allow_html=True)
         
@@ -196,4 +202,4 @@ for i, (m_name, interval, sub_interval) in enumerate(markets_to_scan):
 
 st.markdown("---")
 st.markdown("### 📋 Active Rule & Execution Log")
-st.info("Pro-Tip for Manual Trading: When a Fortress Snipe triggers, never click market buy. Place a Maker Limit Order inside the 52c-60c price zone. If an Emergency Flip Alarm fires, exit immediately.")
+st.info("Pro-Tip for Manual Trading: When a Fortress Snipe triggers, check the contract price. If it is already above 70c, skip it and wait for the next candle timer to reset.")
