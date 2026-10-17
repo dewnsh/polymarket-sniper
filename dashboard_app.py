@@ -152,28 +152,13 @@ def analyze_market_window(market_name: str, interval: str, sub_interval: str):
 st.title("🎯 Polymarket BTC Multi-Timeframe Sniper & Flip Guard")
 st.markdown("Live operational dashboard tracking **1-Hour, 4-Hour, and Daily** markets. Evaluates Past Candles, ATR Cushions, and Spot vs. Perp Order Flow in real time.")
 
-import streamlit.components.v1 as components
-
-# --- SIDEBAR SETTINGS ---
 st.sidebar.header("🛡️ Execution & Risk Settings")
 stake = st.sidebar.number_input("Simulated Stake per Trade ($)", value=100.0, step=25.0, key="stake_input")
 target_early_exit = st.sidebar.slider("Early Profit Exit Target (Cents)", 80, 95, 89, key="exit_slider")
-
-# Auto-Refresh Toggle & 10-Second Interval Loop
-auto_refresh = st.sidebar.checkbox("Auto-Refresh Dashboard (10s)", value=True, key="refresh_checkbox")
+auto_refresh = st.sidebar.checkbox("Auto-Refresh Dashboard (30s)", value=True, key="refresh_checkbox")
 
 if auto_refresh:
-    # This lightweight script tells the browser to reload the page every 10000 milliseconds (10 seconds)
-    components.html(
-        """
-        <script>
-            setTimeout(function() {
-                window.parent.location.reload();
-            }, 10000);
-        </script>
-        """,
-        height=0,
-    )
+    time.sleep(0.1)
 
 col1, col2, col3 = st.columns(3)
 
